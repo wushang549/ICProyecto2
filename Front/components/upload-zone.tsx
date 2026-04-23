@@ -95,9 +95,8 @@ export function UploadZone({
       ),
     ).then((newImages) => {
       onImageSelect(reindexImages([...selectedImages, ...newImages]))
-      setPageIndex(Math.floor((selectedImages.length + newImages.length - 1) / imagesPerPage))
     })
-  }, [imagesPerPage, onImageSelect, reindexImages, selectedImages])
+  }, [onImageSelect, reindexImages, selectedImages])
 
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()

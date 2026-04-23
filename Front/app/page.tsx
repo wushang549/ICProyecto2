@@ -33,7 +33,7 @@ export default function Home() {
 
     setIsAnalyzing(true)
 
-    await new Promise((resolve) => setTimeout(resolve, 5000))
+    await new Promise((resolve) => setTimeout(resolve, 10000))
 
     setResults(getMockBatchResults(selectedImages))
     setIsAnalyzing(false)
