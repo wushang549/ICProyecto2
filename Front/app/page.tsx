@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react"
 import { ArrowDown } from "lucide-react"
 import { AboutSection } from "@/components/about-section"
+import { AnalysisProgress } from "@/components/analysis-progress"
 import { BatchResults } from "@/components/batch-results"
 import { Footer } from "@/components/footer"
 import { Header } from "@/components/header"
@@ -32,7 +33,7 @@ export default function Home() {
 
     setIsAnalyzing(true)
 
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    await new Promise((resolve) => setTimeout(resolve, 5000))
 
     setResults(getMockBatchResults(selectedImages))
     setIsAnalyzing(false)
@@ -76,7 +77,9 @@ export default function Home() {
             </div>
 
             <div id="upload" className="mt-12 scroll-mt-24 sm:mt-16">
-              {!results ? (
+              {isAnalyzing ? (
+                <AnalysisProgress images={selectedImages} />
+              ) : !results ? (
                 <UploadZone
                   onImageSelect={handleImageSelect}
                   selectedImages={selectedImages}
