@@ -15,6 +15,10 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
+defaults:
+  run:
+    working-directory: Front
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -32,6 +36,7 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
+          cache-dependency-path: Front/pnpm-lock.yaml
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -47,7 +52,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          path: out
+          path: Front/out
 
   deploy:
     environment:
