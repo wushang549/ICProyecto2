@@ -64,44 +64,55 @@ function BatchGroupCard({ group }: { group: BatchResultGroup }) {
     <Card className="mx-auto max-w-6xl overflow-hidden border-border shadow-xl">
       <CardContent className="p-0">
         <div className="grid gap-0 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-          <div className="bg-secondary/30 p-6 lg:py-6 lg:pl-6 lg:pr-0">
-            <div className="relative isolate aspect-square w-full overflow-hidden rounded-lg bg-background/70">
-              <img
-                src={activeImage.preview}
-                alt={`Foto ${activeImage.index}: ${activeImage.name}`}
-                className="block h-full w-full rounded-lg object-cover"
-              />
-              <div className="absolute left-4 top-4 rounded-full bg-background/90 px-3 py-1.5 text-xs font-medium text-foreground backdrop-blur-sm">
-                Foto {activeImage.index}
-              </div>
-              <div className="absolute bottom-4 left-4 rounded-full bg-background/90 px-3 py-1.5 text-xs font-medium text-foreground backdrop-blur-sm">
-                {activeIndex + 1} de {group.images.length}
+          <div className="p-6 lg:py-6 lg:pl-6 lg:pr-0">
+            <div className="space-y-3">
+              <div className="relative isolate aspect-square w-full overflow-hidden rounded-lg bg-background/70">
+                <img
+                  src={activeImage.preview}
+                  alt={`Foto ${activeImage.index}: ${activeImage.name}`}
+                  className="block h-full w-full rounded-lg object-cover"
+                />
+                <div className="absolute left-4 top-4 rounded-full bg-background/90 px-3 py-1.5 text-xs font-medium text-foreground backdrop-blur-sm">
+                  Foto {activeImage.index}
+                </div>
+                <div className="absolute bottom-4 left-4 rounded-full bg-background/90 px-3 py-1.5 text-xs font-medium text-foreground backdrop-blur-sm">
+                  {activeIndex + 1} de {group.images.length}
+                </div>
+
+                {hasMultipleImages && (
+                  <>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="icon"
+                      onClick={goToPrevious}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-background/90 shadow-md backdrop-blur-sm"
+                      aria-label="Foto anterior"
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="icon"
+                      onClick={goToNext}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-background/90 shadow-md backdrop-blur-sm"
+                      aria-label="Foto siguiente"
+                    >
+                      <ChevronRight className="h-5 w-5" />
+                    </Button>
+                  </>
+                )}
               </div>
 
-              {hasMultipleImages && (
-                <>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="icon"
-                    onClick={goToPrevious}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-background/90 shadow-md backdrop-blur-sm"
-                    aria-label="Foto anterior"
-                  >
-                    <ChevronLeft className="h-5 w-5" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="icon"
-                    onClick={goToNext}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-background/90 shadow-md backdrop-blur-sm"
-                    aria-label="Foto siguiente"
-                  >
-                    <ChevronRight className="h-5 w-5" />
-                  </Button>
-                </>
-              )}
+              <div className="rounded-lg border border-border/70 px-4 py-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  Confianza de la foto
+                </p>
+                <p className={cn("mt-1 text-lg font-bold", getStatusColor(group.disease))}>
+                  {activeImage.confidence.toFixed(1)}%
+                </p>
+              </div>
             </div>
           </div>
 
@@ -115,7 +126,7 @@ function BatchGroupCard({ group }: { group: BatchResultGroup }) {
                   </span>
                 </div>
                 <h3 className={cn("text-2xl font-bold sm:text-3xl", getStatusColor(group.disease))}>
-                  Se detectó {group.disease.name.toLowerCase()}
+                  Se detecto {group.disease.name.toLowerCase()}
                 </h3>
               </div>
 
@@ -144,14 +155,14 @@ function BatchGroupCard({ group }: { group: BatchResultGroup }) {
 
               <div className="grid gap-5 md:grid-cols-2">
                 <div>
-                  <h4 className="text-sm font-semibold text-foreground">Qué es</h4>
+                  <h4 className="text-sm font-semibold text-foreground">Que es</h4>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                     {group.disease.description}
                   </p>
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-semibold text-foreground">Síntomas comunes</h4>
+                  <h4 className="text-sm font-semibold text-foreground">Sintomas comunes</h4>
                   <ul className="mt-2 space-y-2">
                     {group.disease.symptoms.slice(0, 3).map((symptom) => (
                       <li key={symptom} className="flex items-start gap-2 text-sm text-muted-foreground">
@@ -164,7 +175,7 @@ function BatchGroupCard({ group }: { group: BatchResultGroup }) {
               </div>
 
               <div>
-                <h4 className="text-sm font-semibold text-foreground">Qué hacer</h4>
+                <h4 className="text-sm font-semibold text-foreground">Que hacer</h4>
                 <ul className="mt-2 grid gap-2 md:grid-cols-2">
                   {group.disease.recommendations.slice(0, 4).map((recommendation, index) => (
                     <li key={recommendation} className="flex items-start gap-2 text-sm text-muted-foreground">
@@ -193,22 +204,71 @@ function BatchGroupCard({ group }: { group: BatchResultGroup }) {
 
 export function BatchResults({ groups }: BatchResultsProps) {
   const totalImages = groups.reduce((total, group) => total + group.images.length, 0)
+  const totalConfidence = groups.reduce(
+    (total, group) => total + group.confidence * group.images.length,
+    0,
+  )
+  const averageBatchConfidence = totalImages > 0 ? totalConfidence / totalImages : 0
+  const dominantGroup = groups.reduce<BatchResultGroup | null>((current, group) => {
+    if (!current) {
+      return group
+    }
+
+    if (group.images.length > current.images.length) {
+      return group
+    }
+
+    if (group.images.length === current.images.length && group.confidence > current.confidence) {
+      return group
+    }
+
+    return current
+  }, null)
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="mx-auto max-w-6xl">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-primary">
-              Análisis por lote
-            </p>
-            <h2 className="mt-2 text-3xl font-bold tracking-tight text-foreground">
-              {totalImages} {totalImages === 1 ? "foto clasificada" : "fotos clasificadas"} en {groups.length}{" "}
-              {groups.length === 1 ? "grupo" : "grupos"}
-            </h2>
+      <Card className="mx-auto max-w-6xl border-primary/20 bg-gradient-to-r from-primary/20 via-primary/10 to-secondary/45 shadow-lg">
+        <CardContent className="p-3">
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+            <div className="min-w-0 rounded-lg border border-border/70 bg-background/85 p-2.5 sm:p-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Grupos
+              </p>
+              <p className="mt-1 text-xl font-bold leading-none text-foreground sm:text-2xl">
+                {groups.length}
+              </p>
+            </div>
+
+            <div className="min-w-0 rounded-lg border border-border/70 bg-background/85 p-2.5 sm:p-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                <span className="sm:hidden">Fotos</span>
+                <span className="hidden sm:inline">Fotos analizadas</span>
+              </p>
+              <p className="mt-1 text-xl font-bold leading-none text-foreground sm:text-2xl">
+                {totalImages}
+              </p>
+            </div>
+
+            <div className="min-w-0 rounded-lg border border-border/70 bg-background/85 p-2.5 sm:p-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Clase dominante
+              </p>
+              <p className="mt-1 text-sm font-bold leading-tight text-foreground sm:text-[15px] md:text-base">
+                {dominantGroup?.disease.name ?? "Sin resultados"}
+              </p>
+            </div>
+
+            <div className="min-w-0 rounded-lg border border-border/70 bg-background/85 p-2.5 sm:p-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Confianza lote
+              </p>
+              <p className="mt-1 text-xl font-bold leading-none text-primary sm:text-2xl">
+                {averageBatchConfidence.toFixed(1)}%
+              </p>
+            </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {groups.map((group) => (
         <BatchGroupCard key={group.disease.id} group={group} />
