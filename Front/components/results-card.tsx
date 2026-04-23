@@ -61,7 +61,7 @@ export function ResultsCard({ imagePreview, predictions }: ResultsCardProps) {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <Card className="mx-auto max-w-4xl overflow-hidden border-border shadow-xl">
+      <Card className="mx-auto max-w-6xl overflow-hidden border-border shadow-xl">
         <CardContent className="p-0">
           <div className="grid gap-0 md:grid-cols-2">
             <div className="relative bg-secondary/30 p-6 md:py-6 md:pl-6 md:pr-0">
@@ -88,7 +88,7 @@ export function ResultsCard({ imagePreview, predictions }: ResultsCardProps) {
                   </div>
                   <h3 className={cn("text-2xl font-bold sm:text-3xl", getStatusColor(mainDisease))}>
                     {mainDisease?.severity === "healthy"
-                      ? "Hoja sana"
+                      ? mainDisease.name
                       : `Se detectó ${formatDiseaseName(mainPrediction.class).toLowerCase()}`}
                   </h3>
                 </div>
@@ -132,7 +132,7 @@ export function ResultsCard({ imagePreview, predictions }: ResultsCardProps) {
       </Card>
 
       {mainDisease && (
-        <Card className="mx-auto max-w-4xl border-border shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+        <Card className="mx-auto max-w-6xl border-border shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
           <CardContent className="p-6 sm:p-8">
             <div className="grid gap-8 md:grid-cols-2">
               <div className="space-y-4">
@@ -168,6 +168,13 @@ export function ResultsCard({ imagePreview, predictions }: ResultsCardProps) {
                     </li>
                   ))}
                 </ul>
+
+                <div className="rounded-lg bg-secondary/60 p-4">
+                  <h4 className="text-sm font-semibold text-foreground">Importante</h4>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    {mainDisease.important}
+                  </p>
+                </div>
               </div>
             </div>
           </CardContent>

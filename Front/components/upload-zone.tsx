@@ -60,7 +60,7 @@ export function UploadZone({
   if (selectedImage) {
     return (
       <div className="space-y-6">
-        <div className="relative mx-auto max-w-md">
+        <div className="relative mx-auto max-w-lg">
           <div className="aspect-square w-full overflow-hidden rounded-2xl border-2 border-border bg-card shadow-lg">
             <img 
               src={selectedImage} 
@@ -112,7 +112,7 @@ export function UploadZone({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       className={cn(
-        "relative mx-auto max-w-2xl cursor-pointer rounded-2xl border-2 border-dashed p-8 text-center transition-all duration-300 sm:p-12",
+        "relative mx-auto max-w-4xl cursor-pointer rounded-2xl border-2 border-dashed p-8 text-center transition-all duration-300 sm:p-12",
         isDragOver 
           ? "border-primary bg-primary/5 scale-[1.02]"
           : "border-border bg-card hover:border-primary/50 hover:bg-accent/50"

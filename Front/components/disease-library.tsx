@@ -82,7 +82,7 @@ export function DiseaseLibrary() {
                   <div>
                     <h4 className="text-sm font-semibold text-foreground">Síntomas</h4>
                     <ul className="mt-3 space-y-2">
-                      {disease.symptoms.slice(0, 4).map((symptom) => (
+                      {disease.symptoms.map((symptom) => (
                         <li key={symptom} className="flex gap-2 text-sm text-muted-foreground">
                           <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary" />
                           <span>{symptom}</span>
@@ -94,7 +94,7 @@ export function DiseaseLibrary() {
                   <div>
                     <h4 className="text-sm font-semibold text-foreground">Qué hacer</h4>
                     <ul className="mt-3 space-y-2">
-                      {disease.recommendations.slice(0, 4).map((recommendation) => (
+                      {disease.recommendations.map((recommendation) => (
                         <li key={recommendation} className="flex gap-2 text-sm text-muted-foreground">
                           <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-warning" />
                           <span>{recommendation}</span>
@@ -102,6 +102,13 @@ export function DiseaseLibrary() {
                       ))}
                     </ul>
                   </div>
+                </div>
+
+                <div className="rounded-lg bg-secondary/60 p-4">
+                  <h4 className="text-sm font-semibold text-foreground">Importante</h4>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    {disease.important}
+                  </p>
                 </div>
               </CardContent>
             </Card>
