@@ -64,14 +64,16 @@ export function ResultsCard({ imagePreview, predictions }: ResultsCardProps) {
       <Card className="mx-auto max-w-4xl overflow-hidden border-border shadow-xl">
         <CardContent className="p-0">
           <div className="grid gap-0 md:grid-cols-2">
-            <div className="relative bg-secondary/30">
-              <img
-                src={imagePreview}
-                alt="Hoja de tomate analizada"
-                className="h-64 w-full object-cover md:h-full md:min-h-[320px]"
-              />
-              <div className="absolute bottom-4 left-4 rounded-full bg-background/90 px-3 py-1.5 text-xs font-medium text-foreground backdrop-blur-sm">
-                Imagen subida
+            <div className="relative bg-secondary/30 p-6 md:py-6 md:pl-6 md:pr-0">
+              <div className="relative isolate aspect-square w-full overflow-hidden rounded-lg bg-background/70">
+                <img
+                  src={imagePreview}
+                  alt="Hoja de tomate analizada"
+                  className="block h-full w-full rounded-lg object-cover"
+                />
+                <div className="absolute bottom-4 left-4 rounded-full bg-background/90 px-3 py-1.5 text-xs font-medium text-foreground backdrop-blur-sm">
+                  Imagen subida
+                </div>
               </div>
             </div>
 

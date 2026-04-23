@@ -61,11 +61,11 @@ export function UploadZone({
     return (
       <div className="space-y-6">
         <div className="relative mx-auto max-w-md">
-          <div className="overflow-hidden rounded-2xl border-2 border-border bg-card shadow-lg">
+          <div className="aspect-square w-full overflow-hidden rounded-2xl border-2 border-border bg-card shadow-lg">
             <img 
               src={selectedImage} 
               alt="Hoja de tomate seleccionada"
-              className="h-64 w-full object-cover sm:h-80"
+              className="block h-full w-full rounded-2xl object-cover"
             />
           </div>
           <button
