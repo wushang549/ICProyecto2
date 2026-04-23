@@ -1,48 +1,45 @@
 "use client"
 
-import { useState, useCallback } from "react"
-import { Header } from "@/components/header"
-import { UploadZone } from "@/components/upload-zone"
-import { ResultsCard } from "@/components/results-card"
-import { AboutSection } from "@/components/about-section"
-
-import { Footer } from "@/components/footer"
-import { Button } from "@/components/ui/button"
-import { getRandomPrediction } from "@/lib/disease-data"
+import { useCallback, useState } from "react"
 import { ArrowDown } from "lucide-react"
-
-interface Prediction {
-  class: string
-  confidence: number
-}
+import { AboutSection } from "@/components/about-section"
+import { BatchResults } from "@/components/batch-results"
+import { Footer } from "@/components/footer"
+import { Header } from "@/components/header"
+import { Button } from "@/components/ui/button"
+import { UploadZone } from "@/components/upload-zone"
+import { getMockBatchResults, type BatchResultGroup, type UploadedImage } from "@/lib/batch-analysis"
 
 export default function Home() {
-  const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const [selectedImages, setSelectedImages] = useState<UploadedImage[]>([])
   const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [results, setResults] = useState<Prediction[] | null>(null)
+  const [results, setResults] = useState<BatchResultGroup[] | null>(null)
 
-  const handleImageSelect = useCallback((file: File, preview: string) => {
-    setSelectedImage(preview)
+  const handleImageSelect = useCallback((images: UploadedImage[]) => {
+    setSelectedImages(images)
     setResults(null)
   }, [])
 
   const handleClear = useCallback(() => {
-    setSelectedImage(null)
+    setSelectedImages([])
     setResults(null)
   }, [])
 
   const handleAnalyze = useCallback(async () => {
+    if (selectedImages.length === 0) {
+      return
+    }
+
     setIsAnalyzing(true)
 
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    await new Promise((resolve) => setTimeout(resolve, 2000))
 
-    const prediction = getRandomPrediction()
-    setResults(prediction.predictions)
+    setResults(getMockBatchResults(selectedImages))
     setIsAnalyzing(false)
-  }, [])
+  }, [selectedImages])
 
   const handleUploadAnother = useCallback(() => {
-    setSelectedImage(null)
+    setSelectedImages([])
     setResults(null)
     window.scrollTo({ top: 0, behavior: "smooth" })
   }, [])
@@ -61,11 +58,11 @@ export default function Home() {
               </h1>
 
               <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg text-muted-foreground sm:text-xl">
-                Sube una imagen de una hoja de tomate para identificar posibles enfermedades
-                o confirmar si la hoja está sana.
+                Sube imágenes de hojas de tomate para clasificarlas por enfermedad
+                o confirmar si las hojas están sanas.
               </p>
 
-              {!selectedImage && !results && (
+              {selectedImages.length === 0 && !results && (
                 <div className="mt-8 flex justify-center">
                   <a
                     href="#upload"
@@ -82,17 +79,14 @@ export default function Home() {
               {!results ? (
                 <UploadZone
                   onImageSelect={handleImageSelect}
-                  selectedImage={selectedImage}
+                  selectedImages={selectedImages}
                   onClear={handleClear}
                   isAnalyzing={isAnalyzing}
                   onAnalyze={handleAnalyze}
                 />
               ) : (
                 <div className="space-y-8">
-                  <ResultsCard
-                    imagePreview={selectedImage!}
-                    predictions={results}
-                  />
+                  <BatchResults groups={results} />
 
                   <div className="flex justify-center">
                     <Button
@@ -101,7 +95,7 @@ export default function Home() {
                       variant="outline"
                       className="px-8"
                     >
-                      Subir otra imagen
+                      Subir otro lote
                     </Button>
                   </div>
                 </div>
