@@ -55,7 +55,7 @@ export default function Home() {
             <div className="text-center">
               <h1 className="text-balance text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
                 Tomate Sano
-                <span className="block text-primary">Detecta enfermedades en hojas de tomate a tiempo</span>
+                <span className="block text-primary">Detecta enfermedades a tiempo</span>
               </h1>
 
               <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg text-muted-foreground sm:text-xl">
