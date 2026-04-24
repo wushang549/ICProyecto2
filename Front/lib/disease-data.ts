@@ -1,4 +1,4 @@
-export type DiseaseSeverity = "healthy" | "moderate" | "high"
+export type DiseaseSeverity = "low" | "medium" | "high" | "critical"
 
 export interface DiseaseInfo {
   id: string
@@ -11,12 +11,25 @@ export interface DiseaseInfo {
   important: string
 }
 
+export const diseaseSeverityRank: Record<DiseaseSeverity, number> = {
+  low: 1,
+  medium: 2,
+  high: 3,
+  critical: 4,
+}
+
+export function isHealthyDisease(
+  disease?: Pick<DiseaseInfo, "id" | "category"> | null,
+) {
+  return disease?.id === "Tomato_healthy" || disease?.category === "Estado saludable"
+}
+
 export const diseaseList: DiseaseInfo[] = [
   {
     id: "Tomato_Bacterial_spot",
     name: "Mancha bacteriana",
     category: "Bacteria",
-    severity: "moderate",
+    severity: "high",
     description:
       "Es una enfermedad bacteriana que afecta principalmente las hojas y, en algunos casos, también frutos y tallos del tomate. Suele propagarse con mayor facilidad en ambientes húmedos y con salpicaduras de agua.",
     symptoms: [
@@ -40,7 +53,7 @@ export const diseaseList: DiseaseInfo[] = [
     id: "Tomato_Early_blight",
     name: "Tizón temprano",
     category: "Hongo",
-    severity: "moderate",
+    severity: "high",
     description:
       "Es una enfermedad fúngica frecuente en tomate que afecta sobre todo hojas viejas, aunque también puede presentarse en tallos y frutos. Suele aparecer cuando hay humedad alta y la planta se encuentra estresada.",
     symptoms: [
@@ -64,7 +77,7 @@ export const diseaseList: DiseaseInfo[] = [
     id: "Tomato_Late_blight",
     name: "Tizón tardío",
     category: "Oomiceto",
-    severity: "high",
+    severity: "critical",
     description:
       "Es una enfermedad muy agresiva que puede avanzar rápidamente en condiciones de alta humedad y temperaturas frescas a templadas. Puede afectar hojas, tallos y frutos, causando pérdidas severas si no se detecta a tiempo.",
     symptoms: [
@@ -88,7 +101,7 @@ export const diseaseList: DiseaseInfo[] = [
     id: "Tomato_Leaf_Mold",
     name: "Moho de la hoja",
     category: "Hongo",
-    severity: "moderate",
+    severity: "medium",
     description:
       "Es una enfermedad fúngica que se desarrolla principalmente en ambientes con alta humedad y poca ventilación, especialmente en cultivos protegidos o invernaderos. Afecta sobre todo las hojas.",
     symptoms: [
@@ -112,7 +125,7 @@ export const diseaseList: DiseaseInfo[] = [
     id: "Tomato_Septoria_leaf_spot",
     name: "Mancha foliar por septoria",
     category: "Hongo",
-    severity: "moderate",
+    severity: "high",
     description:
       "Es una enfermedad fúngica que afecta principalmente las hojas del tomate y suele comenzar en las partes bajas de la planta. Es común en condiciones húmedas y puede causar defoliación importante.",
     symptoms: [
@@ -136,7 +149,7 @@ export const diseaseList: DiseaseInfo[] = [
     id: "Tomato_Spider_mites_Two_spotted_spider_mite",
     name: "Daño por araña roja",
     category: "Plaga",
-    severity: "moderate",
+    severity: "medium",
     description:
       "No se trata de un hongo o virus, sino de una plaga de ácaros que se alimentan del tejido de la hoja. Su presencia suele aumentar en ambientes secos y cálidos.",
     symptoms: [
@@ -160,7 +173,7 @@ export const diseaseList: DiseaseInfo[] = [
     id: "Tomato__Target_Spot",
     name: "Mancha objetivo",
     category: "Hongo",
-    severity: "moderate",
+    severity: "medium",
     description:
       "Es una enfermedad que afecta las hojas del tomate y produce lesiones redondas que pueden parecerse a otras manchas foliares. Suele desarrollarse con humedad alta y condiciones favorables para la infección.",
     symptoms: [
@@ -184,7 +197,7 @@ export const diseaseList: DiseaseInfo[] = [
     id: "Tomato__Tomato_YellowLeaf__Curl_Virus",
     name: "Virus del rizado amarillo de la hoja",
     category: "Virus",
-    severity: "high",
+    severity: "critical",
     description:
       "Es una enfermedad viral que afecta gravemente el desarrollo del tomate. Suele estar asociada a insectos vectores y puede reducir notablemente el crecimiento y la producción de la planta.",
     symptoms: [
@@ -232,7 +245,7 @@ export const diseaseList: DiseaseInfo[] = [
     id: "Tomato_healthy",
     name: "Hoja saludable",
     category: "Estado saludable",
-    severity: "healthy",
+    severity: "low",
     description:
       "Corresponde a una hoja de tomate sin señales visibles de enfermedad o daño importante. Una hoja saludable suele indicar que la planta se encuentra en buen estado general.",
     symptoms: [

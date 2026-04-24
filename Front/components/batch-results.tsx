@@ -15,12 +15,18 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import type { BatchResultGroup } from "@/lib/batch-analysis"
-import type { DiseaseInfo } from "@/lib/disease-data"
+import {
+  diseaseSeverityRank,
+  isHealthyDisease,
+  type DiseaseInfo,
+} from "@/lib/disease-data"
 import { cn } from "@/lib/utils"
 
 interface BatchResultsProps {
   groups: BatchResultGroup[]
 }
+
+type GroupSortMode = "default" | "infected" | "severity"
 
 function CategoryIcon({
   src,
@@ -50,53 +56,119 @@ function CategoryIcon({
   )
 }
 
-function getStatusIcon(disease: DiseaseInfo) {
-  if (disease.severity === "healthy" || disease.category === "Estado saludable") {
-    return <Leaf className="h-5 w-5 text-primary" />
-  }
-  if (disease.category === "Plaga") {
-    return <Bug className="h-5 w-5 text-warning" />
-  }
-  if (disease.category === "Virus") {
-    return <Biohazard className="h-5 w-5 text-destructive" />
-  }
-  if (disease.category === "Bacteria") {
-    return <CategoryIcon src="/bacteria2.svg" label="Bacteria" className={getStatusColor(disease)} />
-  }
-  if (disease.category === "Hongo") {
-    return <CategoryIcon src="/mushrooms.svg" label="Hongo" className={getStatusColor(disease)} />
-  }
-  if (disease.category === "Oomiceto") {
-    return <CategoryIcon src="/ameba.svg" label="Oomiceto" className={getStatusColor(disease)} />
-  }
-  if (disease.severity === "high") {
-    return <AlertCircle className="h-5 w-5 text-destructive" />
-  }
-  return <AlertTriangle className="h-5 w-5 text-warning" />
-}
-
 function getStatusColor(disease: DiseaseInfo) {
-  if (disease.severity === "healthy") {
+  if (isHealthyDisease(disease)) {
     return "text-primary"
   }
-  if (disease.severity === "high") {
+  if (disease.severity === "critical") {
     return "text-destructive"
   }
-  return "text-warning"
+  if (disease.severity === "high") {
+    return "text-warning"
+  }
+  if (disease.severity === "medium") {
+    return "text-yellow-500"
+  }
+  return "text-primary"
 }
 
 function getProgressColor(disease: DiseaseInfo) {
-  if (disease.severity === "healthy") {
+  if (isHealthyDisease(disease)) {
     return "[&>div]:bg-primary"
   }
-  if (disease.severity === "high") {
+  if (disease.severity === "critical") {
     return "[&>div]:bg-destructive"
   }
-  return "[&>div]:bg-warning"
+  if (disease.severity === "high") {
+    return "[&>div]:bg-warning"
+  }
+  if (disease.severity === "medium") {
+    return "[&>div]:bg-yellow-400"
+  }
+  return "[&>div]:bg-primary"
+}
+
+function getStatusIcon(disease: DiseaseInfo) {
+  const colorClass = getStatusColor(disease)
+
+  if (isHealthyDisease(disease)) {
+    return <Leaf className={cn("h-5 w-5", colorClass)} />
+  }
+  if (disease.category === "Plaga") {
+    return <Bug className={cn("h-5 w-5", colorClass)} />
+  }
+  if (disease.category === "Virus") {
+    return <Biohazard className={cn("h-5 w-5", colorClass)} />
+  }
+  if (disease.category === "Bacteria") {
+    return <CategoryIcon src="/bacteria2.svg" label="Bacteria" className={colorClass} />
+  }
+  if (disease.category === "Hongo") {
+    return <CategoryIcon src="/mushrooms.svg" label="Hongo" className={colorClass} />
+  }
+  if (disease.category === "Oomiceto") {
+    return <CategoryIcon src="/ameba.svg" label="Oomiceto" className={colorClass} />
+  }
+  if (disease.severity === "critical") {
+    return <AlertCircle className="h-5 w-5 text-destructive" />
+  }
+  if (disease.severity === "high") {
+    return <AlertCircle className="h-5 w-5 text-warning" />
+  }
+  if (disease.severity === "medium") {
+    return <AlertTriangle className="h-5 w-5 text-yellow-500" />
+  }
+  return <AlertTriangle className="h-5 w-5 text-primary" />
 }
 
 function formatPhotoList(group: BatchResultGroup) {
   return group.images.map((image) => `Foto ${image.index}`).join(", ")
+}
+
+function getInfectedImageCount(group: BatchResultGroup) {
+  return isHealthyDisease(group.disease) ? 0 : group.images.length
+}
+
+function sortGroups(groups: BatchResultGroup[], sortMode: GroupSortMode) {
+  if (sortMode === "infected") {
+    return [...groups].sort((a, b) => {
+      const infectedDifference = getInfectedImageCount(b) - getInfectedImageCount(a)
+
+      if (infectedDifference !== 0) {
+        return infectedDifference
+      }
+
+      const severityDifference =
+        diseaseSeverityRank[b.disease.severity] - diseaseSeverityRank[a.disease.severity]
+
+      if (severityDifference !== 0) {
+        return severityDifference
+      }
+
+      return b.confidence - a.confidence
+    })
+  }
+
+  if (sortMode === "severity") {
+    return [...groups].sort((a, b) => {
+      const severityDifference =
+        diseaseSeverityRank[b.disease.severity] - diseaseSeverityRank[a.disease.severity]
+
+      if (severityDifference !== 0) {
+        return severityDifference
+      }
+
+      const infectedDifference = getInfectedImageCount(b) - getInfectedImageCount(a)
+
+      if (infectedDifference !== 0) {
+        return infectedDifference
+      }
+
+      return b.confidence - a.confidence
+    })
+  }
+
+  return groups
 }
 
 function BatchGroupCard({
@@ -267,6 +339,8 @@ function BatchGroupCard({
 }
 
 export function BatchResults({ groups }: BatchResultsProps) {
+  const [sortMode, setSortMode] = useState<GroupSortMode>("default")
+  const displayGroups = sortGroups(groups, sortMode)
   const totalImages = groups.reduce((total, group) => total + group.images.length, 0)
   const totalConfidence = groups.reduce(
     (total, group) => total + group.confidence * group.images.length,
@@ -291,6 +365,46 @@ export function BatchResults({ groups }: BatchResultsProps) {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <Card className="mx-auto max-w-[65rem] border-border/70 shadow-sm">
+        <CardContent className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+          <div className="space-y-1">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              Organizar grupos
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Ordena por hojas afectadas o por severidad del grupo.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant={sortMode === "default" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSortMode("default")}
+            >
+              Vista original
+            </Button>
+            <Button
+              type="button"
+              variant={sortMode === "infected" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSortMode("infected")}
+            >
+              Mas infectadas
+            </Button>
+            <Button
+              type="button"
+              variant={sortMode === "severity" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSortMode("severity")}
+            >
+              Mayor severidad
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card className="mx-auto max-w-[65rem] border-primary/20 bg-gradient-to-r from-primary/20 via-primary/10 to-secondary/45 shadow-lg">
         <CardContent className="p-2.5">
           <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
@@ -334,7 +448,7 @@ export function BatchResults({ groups }: BatchResultsProps) {
         </CardContent>
       </Card>
 
-      {groups.map((group) => (
+      {displayGroups.map((group) => (
         <BatchGroupCard key={group.disease.id} group={group} totalImages={totalImages} />
       ))}
     </div>

@@ -4,7 +4,7 @@ import { AlertCircle, AlertTriangle, CheckCircle2 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
-import { diseaseData, type DiseaseInfo } from "@/lib/disease-data"
+import { diseaseData, isHealthyDisease, type DiseaseInfo } from "@/lib/disease-data"
 
 interface Prediction {
   class: string
@@ -26,33 +26,51 @@ function formatDiseaseName(className: string): string {
 }
 
 function getStatusIcon(disease?: DiseaseInfo) {
-  if (disease?.severity === "healthy") {
+  if (isHealthyDisease(disease)) {
     return <CheckCircle2 className="h-6 w-6 text-primary" />
   }
-  if (disease?.severity === "high") {
+  if (disease?.severity === "critical") {
     return <AlertCircle className="h-6 w-6 text-destructive" />
   }
-  return <AlertTriangle className="h-6 w-6 text-warning" />
+  if (disease?.severity === "high") {
+    return <AlertCircle className="h-6 w-6 text-warning" />
+  }
+  if (disease?.severity === "medium") {
+    return <AlertTriangle className="h-6 w-6 text-yellow-500" />
+  }
+  return <AlertTriangle className="h-6 w-6 text-primary" />
 }
 
 function getStatusColor(disease?: DiseaseInfo) {
-  if (disease?.severity === "healthy") {
+  if (isHealthyDisease(disease)) {
     return "text-primary"
   }
-  if (disease?.severity === "high") {
+  if (disease?.severity === "critical") {
     return "text-destructive"
   }
-  return "text-warning"
+  if (disease?.severity === "high") {
+    return "text-warning"
+  }
+  if (disease?.severity === "medium") {
+    return "text-yellow-500"
+  }
+  return "text-primary"
 }
 
 function getProgressColor(disease?: DiseaseInfo) {
-  if (disease?.severity === "healthy") {
+  if (isHealthyDisease(disease)) {
     return "[&>div]:bg-primary"
   }
-  if (disease?.severity === "high") {
+  if (disease?.severity === "critical") {
     return "[&>div]:bg-destructive"
   }
-  return "[&>div]:bg-warning"
+  if (disease?.severity === "high") {
+    return "[&>div]:bg-warning"
+  }
+  if (disease?.severity === "medium") {
+    return "[&>div]:bg-yellow-400"
+  }
+  return "[&>div]:bg-primary"
 }
 
 export function ResultsCard({ imagePreview, predictions }: ResultsCardProps) {
@@ -87,7 +105,7 @@ export function ResultsCard({ imagePreview, predictions }: ResultsCardProps) {
                     </span>
                   </div>
                   <h3 className={cn("text-2xl font-bold sm:text-3xl", getStatusColor(mainDisease))}>
-                    {mainDisease?.severity === "healthy"
+                    {isHealthyDisease(mainDisease)
                       ? mainDisease.name
                       : `Se detectó ${formatDiseaseName(mainPrediction.class).toLowerCase()}`}
                   </h3>

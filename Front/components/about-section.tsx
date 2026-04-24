@@ -1,9 +1,9 @@
 import Image from "next/image"
 import { assetPath } from "@/lib/asset-path"
-import { diseaseList } from "@/lib/disease-data"
+import { diseaseList, isHealthyDisease } from "@/lib/disease-data"
 
-const trackedDiseases = diseaseList.filter((disease) => disease.severity !== "healthy")
-const healthyState = diseaseList.find((disease) => disease.severity === "healthy")
+const trackedDiseases = diseaseList.filter((disease) => !isHealthyDisease(disease))
+const healthyState = diseaseList.find((disease) => isHealthyDisease(disease))
 
 const features = [
   {

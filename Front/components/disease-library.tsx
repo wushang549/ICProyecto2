@@ -4,18 +4,24 @@ import { diseaseList, type DiseaseInfo } from "@/lib/disease-data"
 import { cn } from "@/lib/utils"
 
 function getSeverityLabel(severity: DiseaseInfo["severity"]) {
-  if (severity === "healthy") {
-    return "Sano"
+  if (severity === "low") {
+    return "Baja prioridad"
+  }
+  if (severity === "critical") {
+    return "Critica"
   }
   if (severity === "high") {
-    return "Atención alta"
+    return "Alta prioridad"
   }
-  return "Atención media"
+  return "Atencion recomendada"
 }
 
 function getSeverityIcon(severity: DiseaseInfo["severity"]) {
-  if (severity === "healthy") {
+  if (severity === "low") {
     return <CheckCircle2 className="h-4 w-4" />
+  }
+  if (severity === "critical") {
+    return <AlertCircle className="h-4 w-4" />
   }
   if (severity === "high") {
     return <AlertCircle className="h-4 w-4" />
@@ -24,13 +30,16 @@ function getSeverityIcon(severity: DiseaseInfo["severity"]) {
 }
 
 function getSeverityClass(severity: DiseaseInfo["severity"]) {
-  if (severity === "healthy") {
+  if (severity === "low") {
     return "bg-primary/10 text-primary"
   }
-  if (severity === "high") {
+  if (severity === "critical") {
     return "bg-destructive/10 text-destructive"
   }
-  return "bg-warning/15 text-warning"
+  if (severity === "high") {
+    return "bg-warning/15 text-warning"
+  }
+  return "bg-yellow-400/20 text-yellow-600"
 }
 
 export function DiseaseLibrary() {
@@ -39,14 +48,14 @@ export function DiseaseLibrary() {
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="max-w-3xl">
           <p className="text-sm font-semibold uppercase tracking-wide text-primary">
-            Catálogo preparado
+            Catalogo preparado
           </p>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            Enfermedades y estados que cubrirá Tomate Sano
+            Enfermedades y estados que cubrira Tomate Sano
           </h2>
           <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
-            Esta información queda lista para mostrarse junto con cada clase del conjunto
-            de datos cuando conectes el análisis real.
+            Esta informacion queda lista para mostrarse junto con cada clase del conjunto
+            de datos cuando conectes el analisis real.
           </p>
         </div>
 
@@ -80,7 +89,7 @@ export function DiseaseLibrary() {
 
                 <div className="grid gap-5 sm:grid-cols-2">
                   <div>
-                    <h4 className="text-sm font-semibold text-foreground">Síntomas</h4>
+                    <h4 className="text-sm font-semibold text-foreground">Sintomas</h4>
                     <ul className="mt-3 space-y-2">
                       {disease.symptoms.map((symptom) => (
                         <li key={symptom} className="flex gap-2 text-sm text-muted-foreground">
@@ -92,7 +101,7 @@ export function DiseaseLibrary() {
                   </div>
 
                   <div>
-                    <h4 className="text-sm font-semibold text-foreground">Qué hacer</h4>
+                    <h4 className="text-sm font-semibold text-foreground">Que hacer</h4>
                     <ul className="mt-3 space-y-2">
                       {disease.recommendations.map((recommendation) => (
                         <li key={recommendation} className="flex gap-2 text-sm text-muted-foreground">
