@@ -16,6 +16,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import type { BatchResultGroup } from "@/lib/batch-analysis"
 import {
+  diseaseData,
   diseaseSeverityRank,
   isHealthyDisease,
   type DiseaseInfo,
@@ -26,7 +27,7 @@ interface BatchResultsProps {
   groups: BatchResultGroup[]
 }
 
-type GroupSortMode = "default" | "infected" | "severity"
+type GroupSortMode = "infected" | "severity"
 
 function CategoryIcon({
   src,
@@ -125,6 +126,22 @@ function formatPhotoList(group: BatchResultGroup) {
   return group.images.map((image) => `Foto ${image.index}`).join(", ")
 }
 
+function formatAlternativePredictions(group: BatchResultGroup, activeIndex: number) {
+  const alternativePredictions =
+    group.images[activeIndex]?.predictions
+      .slice(1)
+      .filter((prediction) => prediction.confidence >= 0.01)
+      .slice(0, 2) ?? []
+
+  if (alternativePredictions.length === 0) {
+    return "No hay clases alternativas disponibles."
+  }
+
+  return `Tambien pudo ser: ${alternativePredictions
+    .map((prediction) => `${diseaseData[prediction.className]?.name ?? prediction.className} ${prediction.confidence.toFixed(1)}%`)
+    .join(" | ")}`
+}
+
 function getInfectedImageCount(group: BatchResultGroup) {
   return isHealthyDisease(group.disease) ? 0 : group.images.length
 }
@@ -149,26 +166,22 @@ function sortGroups(groups: BatchResultGroup[], sortMode: GroupSortMode) {
     })
   }
 
-  if (sortMode === "severity") {
-    return [...groups].sort((a, b) => {
-      const severityDifference =
-        diseaseSeverityRank[b.disease.severity] - diseaseSeverityRank[a.disease.severity]
+  return [...groups].sort((a, b) => {
+    const severityDifference =
+      diseaseSeverityRank[b.disease.severity] - diseaseSeverityRank[a.disease.severity]
 
-      if (severityDifference !== 0) {
-        return severityDifference
-      }
+    if (severityDifference !== 0) {
+      return severityDifference
+    }
 
-      const infectedDifference = getInfectedImageCount(b) - getInfectedImageCount(a)
+    const infectedDifference = getInfectedImageCount(b) - getInfectedImageCount(a)
 
-      if (infectedDifference !== 0) {
-        return infectedDifference
-      }
+    if (infectedDifference !== 0) {
+      return infectedDifference
+    }
 
-      return b.confidence - a.confidence
-    })
-  }
-
-  return groups
+    return b.confidence - a.confidence
+  })
 }
 
 function BatchGroupCard({
@@ -182,6 +195,7 @@ function BatchGroupCard({
   const activeImage = group.images[activeIndex]
   const hasMultipleImages = group.images.length > 1
   const batchShare = totalImages > 0 ? (group.images.length / totalImages) * 100 : 0
+  const confidenceHoverText = formatAlternativePredictions(group, activeIndex)
 
   const goToPrevious = () => {
     setActiveIndex((current) => (current === 0 ? group.images.length - 1 : current - 1))
@@ -240,7 +254,13 @@ function BatchGroupCard({
                 <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                   Confianza de la foto
                 </p>
-                <p className={cn("mt-1 text-base font-bold", getStatusColor(group.disease))}>
+                <p
+                  title={confidenceHoverText}
+                  className={cn(
+                    "mt-1 cursor-help text-base font-bold underline decoration-dotted underline-offset-4",
+                    getStatusColor(group.disease),
+                  )}
+                >
                   {activeImage.confidence.toFixed(1)}%
                 </p>
               </div>
@@ -339,7 +359,7 @@ function BatchGroupCard({
 }
 
 export function BatchResults({ groups }: BatchResultsProps) {
-  const [sortMode, setSortMode] = useState<GroupSortMode>("default")
+  const [sortMode, setSortMode] = useState<GroupSortMode>("severity")
   const displayGroups = sortGroups(groups, sortMode)
   const totalImages = groups.reduce((total, group) => total + group.images.length, 0)
   const totalConfidence = groups.reduce(
@@ -379,11 +399,11 @@ export function BatchResults({ groups }: BatchResultsProps) {
           <div className="flex flex-wrap gap-2">
             <Button
               type="button"
-              variant={sortMode === "default" ? "default" : "outline"}
+              variant={sortMode === "severity" ? "default" : "outline"}
               size="sm"
-              onClick={() => setSortMode("default")}
+              onClick={() => setSortMode("severity")}
             >
-              Vista original
+              Mayor severidad
             </Button>
             <Button
               type="button"
@@ -392,14 +412,6 @@ export function BatchResults({ groups }: BatchResultsProps) {
               onClick={() => setSortMode("infected")}
             >
               Mas infectadas
-            </Button>
-            <Button
-              type="button"
-              variant={sortMode === "severity" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSortMode("severity")}
-            >
-              Mayor severidad
             </Button>
           </div>
         </CardContent>

@@ -1,29 +1,74 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { ArrowDown } from "lucide-react"
 import { AboutSection } from "@/components/about-section"
 import { AnalysisProgress } from "@/components/analysis-progress"
 import { BatchResults } from "@/components/batch-results"
 import { Footer } from "@/components/footer"
 import { Header } from "@/components/header"
+import { ResultsCard } from "@/components/results-card"
 import { Button } from "@/components/ui/button"
 import { UploadZone } from "@/components/upload-zone"
-import { getMockBatchResults, type BatchResultGroup, type UploadedImage } from "@/lib/batch-analysis"
+import {
+  createInitialAnalysisProgress,
+  type AnalysisProgressState,
+  type BatchAnalysisOutcome,
+  type UploadedImage,
+} from "@/lib/batch-analysis"
+import { analyzeTomatoBatch, preloadTomatoModel, resetTomatoModelSession } from "@/lib/tomato-inference"
+
+type ModelStatus = "loading" | "ready" | "error"
+
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error && error.message.trim().length > 0) {
+    return error.message
+  }
+
+  return "Ocurrio un problema inesperado al preparar la inferencia."
+}
 
 export default function Home() {
   const [selectedImages, setSelectedImages] = useState<UploadedImage[]>([])
   const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [results, setResults] = useState<BatchResultGroup[] | null>(null)
+  const [analysisProgress, setAnalysisProgress] = useState<AnalysisProgressState>(
+    createInitialAnalysisProgress(0),
+  )
+  const [analysisOutcome, setAnalysisOutcome] = useState<BatchAnalysisOutcome | null>(null)
+  const [analysisError, setAnalysisError] = useState<string | null>(null)
+  const [modelStatus, setModelStatus] = useState<ModelStatus>("loading")
+  const [modelStatusMessage, setModelStatusMessage] = useState(
+    "Cargando el modelo ONNX directamente en el navegador.",
+  )
+
+  const loadModel = useCallback(async () => {
+    setModelStatus("loading")
+    setModelStatusMessage("Cargando el modelo ONNX directamente en el navegador.")
+
+    try {
+      await preloadTomatoModel()
+      setModelStatus("ready")
+      setModelStatusMessage("Modelo listo para inferencia local sin backend.")
+    } catch (error) {
+      setModelStatus("error")
+      setModelStatusMessage(getErrorMessage(error))
+    }
+  }, [])
+
+  useEffect(() => {
+    void loadModel()
+  }, [loadModel])
 
   const handleImageSelect = useCallback((images: UploadedImage[]) => {
     setSelectedImages(images)
-    setResults(null)
+    setAnalysisOutcome(null)
+    setAnalysisError(null)
   }, [])
 
   const handleClear = useCallback(() => {
     setSelectedImages([])
-    setResults(null)
+    setAnalysisOutcome(null)
+    setAnalysisError(null)
   }, [])
 
   const handleAnalyze = useCallback(async () => {
@@ -32,18 +77,39 @@ export default function Home() {
     }
 
     setIsAnalyzing(true)
+    setAnalysisOutcome(null)
+    setAnalysisError(null)
+    setAnalysisProgress(createInitialAnalysisProgress(selectedImages.length))
 
-    await new Promise((resolve) => setTimeout(resolve, 8000))
+    try {
+      const outcome = await analyzeTomatoBatch(selectedImages, setAnalysisProgress)
 
-    setResults(getMockBatchResults(selectedImages))
-    setIsAnalyzing(false)
+      setAnalysisOutcome(outcome)
+      setModelStatus("ready")
+      setModelStatusMessage("Modelo listo para inferencia local sin backend.")
+    } catch (error) {
+      setAnalysisError(getErrorMessage(error))
+    } finally {
+      setIsAnalyzing(false)
+    }
   }, [selectedImages])
 
   const handleUploadAnother = useCallback(() => {
     setSelectedImages([])
-    setResults(null)
+    setAnalysisOutcome(null)
+    setAnalysisError(null)
     window.scrollTo({ top: 0, behavior: "smooth" })
   }, [])
+
+  const handleRetryModelLoad = useCallback(() => {
+    resetTomatoModelSession()
+    setAnalysisError(null)
+    void loadModel()
+  }, [loadModel])
+
+  const singleImageResult = analysisOutcome?.imageResults.length === 1
+    ? analysisOutcome.imageResults[0]
+    : null
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -59,11 +125,11 @@ export default function Home() {
               </h1>
 
               <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg text-muted-foreground sm:text-xl">
-                Sube imágenes de hojas de tomate para clasificarlas por enfermedad
-                o confirmar si las hojas están sanas.
+                Sube imagenes de hojas de tomate para clasificarlas por enfermedad o
+                confirmar si las hojas estan sanas.
               </p>
 
-              {selectedImages.length === 0 && !results && (
+              {selectedImages.length === 0 && !analysisOutcome && (
                 <div className="mt-8 flex justify-center">
                   <a
                     href="#upload"
@@ -78,18 +144,32 @@ export default function Home() {
 
             <div id="upload" className="mt-12 scroll-mt-24 sm:mt-16">
               {isAnalyzing ? (
-                <AnalysisProgress images={selectedImages} />
-              ) : !results ? (
+                <AnalysisProgress
+                  images={selectedImages}
+                  progressState={analysisProgress}
+                />
+              ) : !analysisOutcome ? (
                 <UploadZone
                   onImageSelect={handleImageSelect}
                   selectedImages={selectedImages}
                   onClear={handleClear}
                   isAnalyzing={isAnalyzing}
                   onAnalyze={handleAnalyze}
+                  modelStatus={modelStatus}
+                  modelStatusMessage={modelStatusMessage}
+                  analysisError={analysisError}
+                  onRetryModelLoad={handleRetryModelLoad}
                 />
               ) : (
                 <div className="space-y-8">
-                  <BatchResults groups={results} />
+                  {singleImageResult ? (
+                    <ResultsCard
+                      imagePreview={singleImageResult.preview}
+                      predictions={singleImageResult.predictions}
+                    />
+                  ) : (
+                    <BatchResults groups={analysisOutcome.groups} />
+                  )}
 
                   <div className="flex justify-center">
                     <Button

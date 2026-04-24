@@ -1,80 +1,82 @@
-import { diseaseList, type DiseaseInfo } from "@/lib/disease-data"
+import { diseaseData, diseaseList, type DiseaseInfo } from "@/lib/disease-data"
 
 export interface UploadedImage {
   id: string
   name: string
+  file: File
   preview: string
   index: number
 }
 
-export interface BatchImageResult extends UploadedImage {
+export interface PredictionEntry {
+  className: string
+  confidence: number
+}
+
+export interface ImageAnalysisResult extends UploadedImage {
   diseaseId: string
   confidence: number
+  predictions: PredictionEntry[]
 }
 
 export interface BatchResultGroup {
   disease: DiseaseInfo
-  images: BatchImageResult[]
+  images: ImageAnalysisResult[]
   confidence: number
 }
 
-const mockDiseasePool = diseaseList
-const groupedMockBuckets: string[][] = [
-  ["Estado saludable"],
-  ["Plaga"],
-  ["Virus"],
-  ["Bacteria"],
-  ["Hongo"],
-  ["Oomiceto"],
-]
+export type AnalysisPhase =
+  | "model-loading"
+  | "preprocessing"
+  | "inferencing"
+  | "grouping"
+  | "completed"
 
-function randomConfidence() {
-  return 82 + Math.random() * 16
+export interface AnalysisProgressState {
+  phase: AnalysisPhase
+  progress: number
+  processedCount: number
+  activeImageIndex: number | null
+  totalImages: number
+  statusLabel: string
 }
 
-function getRandomDisease(diseases: DiseaseInfo[]) {
-  return diseases[Math.floor(Math.random() * diseases.length)]
+export interface BatchAnalysisOutcome {
+  imageResults: ImageAnalysisResult[]
+  groups: BatchResultGroup[]
 }
 
-function getMockDiseasesForBatch(imageCount: number) {
-  if (imageCount < groupedMockBuckets.length) {
-    return Array.from({ length: imageCount }, () => getRandomDisease(mockDiseasePool))
+export const INITIAL_ANALYSIS_PROGRESS: Omit<AnalysisProgressState, "totalImages"> = {
+  phase: "model-loading",
+  progress: 0,
+  processedCount: 0,
+  activeImageIndex: null,
+  statusLabel: "Preparando analisis",
+}
+
+export function createInitialAnalysisProgress(totalImages: number): AnalysisProgressState {
+  return {
+    ...INITIAL_ANALYSIS_PROGRESS,
+    totalImages,
   }
-
-  const representativeDiseases = groupedMockBuckets.map((categories) =>
-    getRandomDisease(
-      mockDiseasePool.filter((disease) => categories.includes(disease.category)),
-    ),
-  )
-
-  const remainingDiseases = Array.from(
-    { length: imageCount - representativeDiseases.length },
-    () => getRandomDisease(representativeDiseases),
-  )
-
-  return [...representativeDiseases, ...remainingDiseases].sort(() => Math.random() - 0.5)
 }
 
-export function getMockBatchResults(images: UploadedImage[]): BatchResultGroup[] {
-  const groupedResults = new Map<string, BatchImageResult[]>()
-  const assignedDiseases = getMockDiseasesForBatch(images.length)
+export function buildBatchResultGroups(imageResults: ImageAnalysisResult[]): BatchResultGroup[] {
+  const groupedResults = new Map<string, ImageAnalysisResult[]>()
 
-  images.forEach((image, index) => {
-    const disease = assignedDiseases[index]
-    const result: BatchImageResult = {
-      ...image,
-      diseaseId: disease.id,
-      confidence: randomConfidence(),
-    }
-
-    groupedResults.set(disease.id, [...(groupedResults.get(disease.id) ?? []), result])
+  imageResults.forEach((imageResult) => {
+    groupedResults.set(imageResult.diseaseId, [
+      ...(groupedResults.get(imageResult.diseaseId) ?? []),
+      imageResult,
+    ])
   })
 
   return diseaseList
     .map((disease) => {
       const groupedImages = groupedResults.get(disease.id) ?? []
       const confidence =
-        groupedImages.reduce((total, image) => total + image.confidence, 0) / groupedImages.length
+        groupedImages.reduce((total, image) => total + image.confidence, 0) /
+        groupedImages.length
 
       return {
         disease,
@@ -83,4 +85,17 @@ export function getMockBatchResults(images: UploadedImage[]): BatchResultGroup[]
       }
     })
     .filter((group) => group.images.length > 0)
+}
+
+export function createBatchAnalysisOutcome(
+  imageResults: ImageAnalysisResult[],
+): BatchAnalysisOutcome {
+  return {
+    imageResults,
+    groups: buildBatchResultGroups(imageResults),
+  }
+}
+
+export function getDiseaseInfo(diseaseId: string) {
+  return diseaseData[diseaseId]
 }

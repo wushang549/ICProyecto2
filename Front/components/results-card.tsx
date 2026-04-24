@@ -3,17 +3,13 @@
 import { AlertCircle, AlertTriangle, CheckCircle2 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import type { PredictionEntry } from "@/lib/batch-analysis"
 import { cn } from "@/lib/utils"
 import { diseaseData, isHealthyDisease, type DiseaseInfo } from "@/lib/disease-data"
 
-interface Prediction {
-  class: string
-  confidence: number
-}
-
 interface ResultsCardProps {
   imagePreview: string
-  predictions: Prediction[]
+  predictions: PredictionEntry[]
 }
 
 function formatDiseaseName(className: string): string {
@@ -23,6 +19,21 @@ function formatDiseaseName(className: string): string {
     .trim()
 
   return diseaseData[className]?.name ?? fallbackName
+}
+
+function formatAlternativePredictions(predictions: PredictionEntry[]) {
+  const alternativePredictions = predictions
+    .slice(1)
+    .filter((prediction) => prediction.confidence >= 0.01)
+    .slice(0, 2)
+
+  if (alternativePredictions.length === 0) {
+    return "No hay clases alternativas disponibles."
+  }
+
+  return `Tambien pudo ser: ${alternativePredictions
+    .map((prediction) => `${formatDiseaseName(prediction.className)} ${prediction.confidence.toFixed(1)}%`)
+    .join(" | ")}`
 }
 
 function getStatusIcon(disease?: DiseaseInfo) {
@@ -75,7 +86,13 @@ function getProgressColor(disease?: DiseaseInfo) {
 
 export function ResultsCard({ imagePreview, predictions }: ResultsCardProps) {
   const mainPrediction = predictions[0]
-  const mainDisease = diseaseData[mainPrediction.class]
+
+  if (!mainPrediction) {
+    return null
+  }
+
+  const mainDisease = diseaseData[mainPrediction.className]
+  const confidenceHoverText = formatAlternativePredictions(predictions)
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -101,20 +118,26 @@ export function ResultsCard({ imagePreview, predictions }: ResultsCardProps) {
                   <div className="flex items-center gap-2">
                     {getStatusIcon(mainDisease)}
                     <span className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-                      Diagnóstico
+                      Diagnostico
                     </span>
                   </div>
                   <h3 className={cn("text-2xl font-bold sm:text-3xl", getStatusColor(mainDisease))}>
                     {isHealthyDisease(mainDisease)
                       ? mainDisease.name
-                      : `Se detectó ${formatDiseaseName(mainPrediction.class).toLowerCase()}`}
+                      : `Se detecto ${formatDiseaseName(mainPrediction.className).toLowerCase()}`}
                   </h3>
                 </div>
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-muted-foreground">Confianza</span>
-                    <span className={cn("text-lg font-bold", getStatusColor(mainDisease))}>
+                    <span
+                      title={confidenceHoverText}
+                      className={cn(
+                        "cursor-help text-lg font-bold underline decoration-dotted underline-offset-4",
+                        getStatusColor(mainDisease),
+                      )}
+                    >
                       {mainPrediction.confidence.toFixed(1)}%
                     </span>
                   </div>
@@ -127,16 +150,21 @@ export function ResultsCard({ imagePreview, predictions }: ResultsCardProps) {
                 <div className="space-y-3 border-t border-border pt-4">
                   <span className="text-sm font-medium text-muted-foreground">Otras posibilidades</span>
                   <div className="space-y-2">
-                    {predictions.slice(1).map((pred) => (
-                      <div key={pred.class} className="flex items-center justify-between text-sm">
-                        <span className="text-foreground/80">{formatDiseaseName(pred.class)}</span>
+                    {predictions.slice(1).map((prediction) => (
+                      <div
+                        key={prediction.className}
+                        className="flex items-center justify-between text-sm"
+                      >
+                        <span className="text-foreground/80">
+                          {formatDiseaseName(prediction.className)}
+                        </span>
                         <div className="flex items-center gap-2">
                           <Progress
-                            value={pred.confidence}
+                            value={prediction.confidence}
                             className="h-1.5 w-20 [&>div]:bg-muted-foreground/40"
                           />
                           <span className="w-12 text-right text-muted-foreground">
-                            {pred.confidence.toFixed(1)}%
+                            {prediction.confidence.toFixed(1)}%
                           </span>
                         </div>
                       </div>
@@ -155,14 +183,14 @@ export function ResultsCard({ imagePreview, predictions }: ResultsCardProps) {
             <div className="grid gap-8 md:grid-cols-2">
               <div className="space-y-4">
                 <div>
-                  <h4 className="mb-2 text-lg font-semibold text-foreground">Qué es</h4>
+                  <h4 className="mb-2 text-lg font-semibold text-foreground">Que es</h4>
                   <p className="leading-relaxed text-muted-foreground">
                     {mainDisease.description}
                   </p>
                 </div>
 
                 <div>
-                  <h4 className="mb-3 text-lg font-semibold text-foreground">Síntomas comunes</h4>
+                  <h4 className="mb-3 text-lg font-semibold text-foreground">Sintomas comunes</h4>
                   <ul className="space-y-2">
                     {mainDisease.symptoms.map((symptom) => (
                       <li key={symptom} className="flex items-start gap-2 text-sm text-muted-foreground">
@@ -175,14 +203,14 @@ export function ResultsCard({ imagePreview, predictions }: ResultsCardProps) {
               </div>
 
               <div className="space-y-4">
-                <h4 className="text-lg font-semibold text-foreground">Qué hacer</h4>
+                <h4 className="text-lg font-semibold text-foreground">Que hacer</h4>
                 <ul className="space-y-3">
-                  {mainDisease.recommendations.map((rec, index) => (
-                    <li key={rec} className="flex items-start gap-3 text-sm">
+                  {mainDisease.recommendations.map((recommendation, index) => (
+                    <li key={recommendation} className="flex items-start gap-3 text-sm">
                       <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
                         {index + 1}
                       </span>
-                      <span className="pt-0.5 text-muted-foreground">{rec}</span>
+                      <span className="pt-0.5 text-muted-foreground">{recommendation}</span>
                     </li>
                   ))}
                 </ul>
