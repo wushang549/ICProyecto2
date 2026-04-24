@@ -1,4 +1,5 @@
 # TomateSano
+Hosteado en: 'https://wushang549.github.io/ICProyecto2/'
 
 Aplicación  para revisar hojas de tomate y detectar posibles enfermedades.
 
@@ -10,4 +11,4 @@ corepack pnpm dev
 ```
 
 La app se abre en `http://localhost:3000`.
-Hosteado en: 'https://wushang549.github.io/ICProyecto2/'
+
