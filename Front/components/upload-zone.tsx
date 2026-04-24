@@ -236,6 +236,7 @@ export function UploadZone({
             multiple
             onChange={handleFileInput}
             className="sr-only"
+            suppressHydrationWarning
             aria-label="Añadir imágenes al lote"
           />
 
@@ -270,6 +271,7 @@ export function UploadZone({
         multiple
         onChange={handleFileInput}
         className="absolute inset-0 cursor-pointer opacity-0"
+        suppressHydrationWarning
         aria-label="Subir imágenes de hojas de tomate"
       />
 
