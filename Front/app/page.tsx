@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { ArrowDown } from "lucide-react"
+import { ArrowDown, Download, LoaderCircle } from "lucide-react"
 import { AboutSection } from "@/components/about-section"
 import { AnalysisProgress } from "@/components/analysis-progress"
 import { BatchResults } from "@/components/batch-results"
@@ -16,6 +16,7 @@ import {
   type BatchAnalysisOutcome,
   type UploadedImage,
 } from "@/lib/batch-analysis"
+import { generateAnalysisReportPdf } from "@/lib/analysis-report"
 import { analyzeTomatoBatch, preloadTomatoModel, resetTomatoModelSession } from "@/lib/tomato-inference"
 
 type ModelStatus = "loading" | "ready" | "error"
@@ -36,6 +37,8 @@ export default function Home() {
   )
   const [analysisOutcome, setAnalysisOutcome] = useState<BatchAnalysisOutcome | null>(null)
   const [analysisError, setAnalysisError] = useState<string | null>(null)
+  const [reportError, setReportError] = useState<string | null>(null)
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false)
   const [modelStatus, setModelStatus] = useState<ModelStatus>("loading")
   const [modelStatusMessage, setModelStatusMessage] = useState(
     "Cargando el modelo ONNX directamente en el navegador.",
@@ -63,12 +66,14 @@ export default function Home() {
     setSelectedImages(images)
     setAnalysisOutcome(null)
     setAnalysisError(null)
+    setReportError(null)
   }, [])
 
   const handleClear = useCallback(() => {
     setSelectedImages([])
     setAnalysisOutcome(null)
     setAnalysisError(null)
+    setReportError(null)
   }, [])
 
   const handleAnalyze = useCallback(async () => {
@@ -79,6 +84,7 @@ export default function Home() {
     setIsAnalyzing(true)
     setAnalysisOutcome(null)
     setAnalysisError(null)
+    setReportError(null)
     setAnalysisProgress(createInitialAnalysisProgress(selectedImages.length))
 
     try {
@@ -98,8 +104,26 @@ export default function Home() {
     setSelectedImages([])
     setAnalysisOutcome(null)
     setAnalysisError(null)
+    setReportError(null)
     window.scrollTo({ top: 0, behavior: "smooth" })
   }, [])
+
+  const handleGenerateReport = useCallback(async () => {
+    if (!analysisOutcome) {
+      return
+    }
+
+    setIsGeneratingReport(true)
+    setReportError(null)
+
+    try {
+      await generateAnalysisReportPdf(analysisOutcome)
+    } catch (error) {
+      setReportError(getErrorMessage(error))
+    } finally {
+      setIsGeneratingReport(false)
+    }
+  }, [analysisOutcome])
 
   const handleRetryModelLoad = useCallback(() => {
     resetTomatoModelSession()
@@ -171,15 +195,40 @@ export default function Home() {
                     <BatchResults groups={analysisOutcome.groups} />
                   )}
 
-                  <div className="flex justify-center">
-                    <Button
-                      onClick={handleUploadAnother}
-                      size="lg"
-                      variant="outline"
-                      className="px-8"
-                    >
-                      Subir otro lote
-                    </Button>
+                  <div className="space-y-3">
+                    {reportError && (
+                      <p className="text-center text-sm text-destructive">{reportError}</p>
+                    )}
+
+                    <div className="flex flex-wrap justify-center gap-3">
+                      <Button
+                        onClick={handleGenerateReport}
+                        size="lg"
+                        className="px-8"
+                        disabled={isGeneratingReport}
+                      >
+                        {isGeneratingReport ? (
+                          <>
+                            <LoaderCircle className="h-4 w-4 animate-spin" />
+                            Generando reporte...
+                          </>
+                        ) : (
+                          <>
+                            <Download className="h-4 w-4" />
+                            Generar reporte
+                          </>
+                        )}
+                      </Button>
+
+                      <Button
+                        onClick={handleUploadAnother}
+                        size="lg"
+                        variant="outline"
+                        className="px-8"
+                      >
+                        Subir otro lote
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}
