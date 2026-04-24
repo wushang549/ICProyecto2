@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { assetPath } from "@/lib/asset-path"
 import type { BatchResultGroup } from "@/lib/batch-analysis"
 import {
   diseaseData,
@@ -118,13 +119,13 @@ function getStatusIcon(disease: DiseaseInfo) {
     return <Biohazard className={cn("h-5 w-5", colorClass)} />
   }
   if (disease.category === "Bacteria") {
-    return <CategoryIcon src="/bacteria2.svg" label="Bacteria" className={colorClass} />
+    return <CategoryIcon src={assetPath("/bacteria2.svg")} label="Bacteria" className={colorClass} />
   }
   if (disease.category === "Hongo") {
-    return <CategoryIcon src="/mushrooms.svg" label="Hongo" className={colorClass} />
+    return <CategoryIcon src={assetPath("/mushrooms.svg")} label="Hongo" className={colorClass} />
   }
   if (disease.category === "Oomiceto") {
-    return <CategoryIcon src="/ameba.svg" label="Oomiceto" className={colorClass} />
+    return <CategoryIcon src={assetPath("/ameba.svg")} label="Oomiceto" className={colorClass} />
   }
   if (disease.severity === "critical") {
     return <AlertCircle className="h-5 w-5 text-destructive" />
