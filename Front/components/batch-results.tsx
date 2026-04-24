@@ -89,6 +89,22 @@ function getProgressColor(disease: DiseaseInfo) {
   return "[&>div]:bg-primary"
 }
 
+function getSoftStatusClasses(disease: DiseaseInfo) {
+  if (isHealthyDisease(disease)) {
+    return "border-primary/20 bg-primary/8 text-primary"
+  }
+  if (disease.severity === "critical") {
+    return "border-destructive/20 bg-destructive/8 text-destructive"
+  }
+  if (disease.severity === "high") {
+    return "border-warning/20 bg-warning/10 text-warning"
+  }
+  if (disease.severity === "medium") {
+    return "border-yellow-400/25 bg-yellow-400/10 text-yellow-600"
+  }
+  return "border-primary/20 bg-primary/8 text-primary"
+}
+
 function getStatusIcon(disease: DiseaseInfo) {
   const colorClass = getStatusColor(disease)
 
@@ -184,6 +200,23 @@ function sortGroups(groups: BatchResultGroup[], sortMode: GroupSortMode) {
   })
 }
 
+function InfoQuadrant({
+  title,
+  children,
+  className,
+}: {
+  title: string
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <div className={cn("rounded-xl border border-border/70 bg-background/70 px-2.5 py-2", className)}>
+      <h4 className="text-[12px] font-semibold text-foreground">{title}</h4>
+      <div className="mt-1">{children}</div>
+    </div>
+  )
+}
+
 function BatchGroupCard({
   group,
   totalImages,
@@ -206,21 +239,21 @@ function BatchGroupCard({
   }
 
   return (
-    <Card className="mx-auto max-w-[65rem] overflow-hidden border-border shadow-xl">
-      <CardContent className="p-0">
-        <div className="grid gap-0 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-          <div className="p-5 lg:py-5 lg:pl-5 lg:pr-0">
-            <div className="space-y-2.5">
-              <div className="relative isolate aspect-square w-full overflow-hidden rounded-lg bg-background/70">
+    <Card className="mx-auto max-w-[65rem] overflow-hidden border-border py-2 shadow-xl">
+      <CardContent className="px-3 py-2.5 sm:px-3.5 sm:py-3">
+        <div className="grid gap-3 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)]">
+          <div className="rounded-xl border border-border/70 bg-background/70 px-2.5 py-2">
+            <div className="space-y-2">
+              <div className="relative isolate aspect-[17/9] w-full overflow-hidden rounded-lg bg-background/70">
                 <img
                   src={activeImage.preview}
                   alt={`Foto ${activeImage.index}: ${activeImage.name}`}
                   className="block h-full w-full rounded-lg object-cover"
                 />
-                <div className="absolute left-3 top-3 rounded-full bg-background/90 px-2.5 py-1 text-[11px] font-medium text-foreground backdrop-blur-sm">
+                <div className="absolute left-2 top-2 rounded-full bg-background/90 px-2 py-0.5 text-[10px] font-medium text-foreground backdrop-blur-sm">
                   Foto {activeImage.index}
                 </div>
-                <div className="absolute bottom-3 left-3 rounded-full bg-background/90 px-2.5 py-1 text-[11px] font-medium text-foreground backdrop-blur-sm">
+                <div className="absolute bottom-2 left-2 rounded-full bg-background/90 px-2 py-0.5 text-[10px] font-medium text-foreground backdrop-blur-sm">
                   {activeIndex + 1} de {group.images.length}
                 </div>
 
@@ -231,126 +264,127 @@ function BatchGroupCard({
                       variant="secondary"
                       size="icon"
                       onClick={goToPrevious}
-                      className="absolute left-2.5 top-1/2 h-8 w-8 -translate-y-1/2 rounded-full bg-background/90 shadow-md backdrop-blur-sm"
+                      className="absolute left-1.5 top-1/2 h-6.5 w-6.5 -translate-y-1/2 rounded-full bg-background/90 shadow-md backdrop-blur-sm"
                       aria-label="Foto anterior"
                     >
-                      <ChevronLeft className="h-4.5 w-4.5" />
+                      <ChevronLeft className="h-3.5 w-3.5" />
                     </Button>
                     <Button
                       type="button"
                       variant="secondary"
                       size="icon"
                       onClick={goToNext}
-                      className="absolute right-2.5 top-1/2 h-8 w-8 -translate-y-1/2 rounded-full bg-background/90 shadow-md backdrop-blur-sm"
+                      className="absolute right-1.5 top-1/2 h-6.5 w-6.5 -translate-y-1/2 rounded-full bg-background/90 shadow-md backdrop-blur-sm"
                       aria-label="Foto siguiente"
                     >
-                      <ChevronRight className="h-4.5 w-4.5" />
+                      <ChevronRight className="h-3.5 w-3.5" />
                     </Button>
                   </>
                 )}
               </div>
 
-              <div className="rounded-lg border border-border/70 px-3.5 py-2.5">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                  Confianza de la foto
-                </p>
-                <p
-                  title={confidenceHoverText}
-                  className={cn(
-                    "mt-1 cursor-help text-base font-bold underline decoration-dotted underline-offset-4",
-                    getStatusColor(group.disease),
-                  )}
-                >
-                  {activeImage.confidence.toFixed(1)}%
-                </p>
+              <div className="rounded-lg border border-border/70 px-2.5 py-1">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                    Confianza de la foto
+                  </p>
+                  <p
+                    title={confidenceHoverText}
+                    className={cn(
+                      "cursor-help whitespace-nowrap text-[14px] font-bold underline decoration-dotted underline-offset-4",
+                      getStatusColor(group.disease),
+                    )}
+                  >
+                    {activeImage.confidence.toFixed(1)}%
+                  </p>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-col justify-center p-5 sm:p-7">
-            <div className="space-y-5">
-              <div className="space-y-2.5">
+          <div className="rounded-xl border border-border/70 bg-background/70 px-3 py-2.5">
+            <div className="space-y-3">
+              <div className="space-y-1.5">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
                     {getStatusIcon(group.disease)}
-                    <span className="text-[13px] font-medium uppercase tracking-wider text-muted-foreground">
+                    <span className="text-[12px] font-medium uppercase tracking-wider text-muted-foreground">
                       Grupo detectado
                     </span>
                   </div>
-                  <span className="whitespace-nowrap text-[12px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  <span className="whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                     {batchShare.toFixed(1)}% del lote
                   </span>
                 </div>
-                <h3 className={cn("text-[1.35rem] font-bold sm:text-[1.7rem]", getStatusColor(group.disease))}>
+                <h3 className={cn("text-[1.12rem] font-bold leading-tight sm:text-[1.35rem]", getStatusColor(group.disease))}>
                   Se detecto {group.disease.name.toLowerCase()}
                 </h3>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <div className="flex items-center justify-between gap-4">
-                  <span className="text-[13px] font-medium text-muted-foreground">Confianza promedio</span>
-                  <span className={cn("text-base font-bold", getStatusColor(group.disease))}>
+                  <span className="text-[12px] font-medium text-muted-foreground">Confianza promedio</span>
+                  <span className={cn("text-[15px] font-bold", getStatusColor(group.disease))}>
                     {group.confidence.toFixed(1)}%
                   </span>
                 </div>
                 <Progress
                   value={group.confidence}
-                  className={cn("h-2.5", getProgressColor(group.disease))}
+                  className={cn("h-1.5", getProgressColor(group.disease))}
                 />
               </div>
 
-              <div className="space-y-2.5 border-t border-border pt-3.5">
-                <div className="flex items-center gap-2 text-[13px] font-medium text-muted-foreground">
-                  <Images className="h-3.5 w-3.5" />
+              <div className="space-y-1.5 border-t border-border pt-2">
+                <div className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground">
+                  <Images className="h-3 w-3" />
                   {group.images.length} {group.images.length === 1 ? "foto asignada" : "fotos asignadas"}
                 </div>
-                <p className="text-[13px] leading-relaxed text-foreground/80">
+                <p className="text-[12px] leading-relaxed text-foreground/80">
                   {formatPhotoList(group)}
                 </p>
               </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <h4 className="text-[13px] font-semibold text-foreground">Que es</h4>
-                  <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
-                    {group.disease.description}
-                  </p>
-                </div>
-
-                <div>
-                  <h4 className="text-[13px] font-semibold text-foreground">Sintomas comunes</h4>
-                  <ul className="mt-1.5 space-y-1.5">
-                    {group.disease.symptoms.slice(0, 3).map((symptom) => (
-                      <li key={symptom} className="flex items-start gap-2 text-[13px] text-muted-foreground">
-                        <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary" />
-                        <span>{symptom}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="text-[13px] font-semibold text-foreground">Que hacer</h4>
-                <ul className="mt-1.5 grid gap-1.5 md:grid-cols-2">
-                  {group.disease.recommendations.slice(0, 4).map((recommendation, index) => (
-                    <li key={recommendation} className="flex items-start gap-2 text-[13px] text-muted-foreground">
-                      <span className="flex h-4.5 w-4.5 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-semibold text-primary">
-                        {index + 1}
-                      </span>
-                      <span>{recommendation}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="rounded-lg bg-secondary/60 p-3.5">
-                <h4 className="text-[13px] font-semibold text-foreground">Importante</h4>
-                <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
-                  {group.disease.important}
-                </p>
-              </div>
             </div>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2 lg:col-span-2">
+            <InfoQuadrant title="Que es">
+              <p className="text-[12px] leading-relaxed text-muted-foreground">
+                {group.disease.description}
+              </p>
+            </InfoQuadrant>
+
+            <InfoQuadrant title="Sintomas comunes">
+              <ul className="space-y-1">
+                {group.disease.symptoms.slice(0, 4).map((symptom) => (
+                  <li key={symptom} className="flex items-start gap-1.5 text-[12px] text-muted-foreground">
+                    <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary" />
+                    <span>{symptom}</span>
+                  </li>
+                ))}
+              </ul>
+            </InfoQuadrant>
+
+            <InfoQuadrant title="Que Hacer">
+              <ul className="space-y-1">
+                {group.disease.recommendations.slice(0, 4).map((recommendation, index) => (
+                  <li key={recommendation} className="flex items-start gap-1.5 text-[12px] text-muted-foreground">
+                    <span className="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary">
+                      {index + 1}
+                    </span>
+                    <span>{recommendation}</span>
+                  </li>
+                ))}
+              </ul>
+            </InfoQuadrant>
+
+            <InfoQuadrant
+              title="Importante"
+              className={getSoftStatusClasses(group.disease)}
+            >
+              <p className="text-[12px] leading-relaxed text-foreground">
+                {group.disease.important}
+              </p>
+            </InfoQuadrant>
           </div>
         </div>
       </CardContent>
@@ -385,7 +419,7 @@ export function BatchResults({ groups }: BatchResultsProps) {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <Card className="mx-auto max-w-[65rem] border-border/70 shadow-sm">
+      <Card className="mx-auto max-w-[65rem] border-border/70 py-2 shadow-sm">
         <CardContent className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
           <div className="space-y-1">
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
@@ -417,7 +451,7 @@ export function BatchResults({ groups }: BatchResultsProps) {
         </CardContent>
       </Card>
 
-      <Card className="mx-auto max-w-[65rem] border-primary/20 bg-gradient-to-r from-primary/20 via-primary/10 to-secondary/45 shadow-lg">
+      <Card className="mx-auto max-w-[65rem] border-primary/20 bg-gradient-to-r from-primary/20 via-primary/10 to-secondary/45 py-2 shadow-lg">
         <CardContent className="p-2.5">
           <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
             <div className="min-w-0 rounded-lg border border-border/70 bg-background/85 p-2 sm:p-2.5">
